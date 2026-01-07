@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>餐厅点餐系统 - 顾客端</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>餐厅点餐系统</h1>
+        <div class="admin-link">
+            <a href="/admin/login">管理员入口</a> | 
+            <a href="/query_order">查询订单</a>
+        </div>
+        
+        <!-- 订单类型选择 -->
+        <div class="order-type">
+            <button onclick="switchOrderType('dinein')" class="active">到店消费</button>
+            <button onclick="switchOrderType('takeout')">外卖</button>
+        </div>
+
+        <!-- 到店订单表单 -->
+        <div id="dinein-form" class="order-form">
+            <h3>到店点餐信息</h3>
+            <div class="form-group">
+                <label>餐桌号：</label>
+                <input type="text" id="table_num" placeholder="例如：101、VIP02">
+            </div>
+            <div class="form-group">
+                <label>手机号：</label>
+                <input type="tel" id="dinein_phone" placeholder="请输入11位手机号" maxlength="11">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="has_room_fee" value="1"> 是否需要包厢（+20元）
+                </label>
+            </div>
+        </div>
+
+        <!-- 外卖订单表单 -->
+        <div id="takeout-form" class="order-form hidden">
+            <h3>外卖点餐信息</h3>
+            <div class="form-group">
+                <label>送餐时间：</label>
+                <input type="datetime-local" id="takeout_time">
+            </div>
+            <div class="form-group">
+                <label>送餐地址：</label>
+                <input type="text" id="takeout_address" placeholder="详细送餐地址">
+            </div>
+            <div class="form-group">
+                <label>手机号：</label>
+                <input type="tel" id="takeout_phone" placeholder="请输入11位手机号" maxlength="11">
+            </div>
+        </div>
+
+        <!-- 菜品列表 -->
+        <div class="dish-list">
+            <h3>餐厅菜单</h3>
+            {% if dishes|length == 0 %}
+                <p>暂无菜品，请联系管理员添加</p>
+            {% else %}
+                <table>
+                    <tr>
+                        <th>菜品图片</th>
+                        <th>菜品名称</th>
+                        <th>原价(元)</th>
+                        <th>折扣</th>
+                        <th>折后价(元)</th>
+                        <th>购买数量</th>
+                    </tr>
+                    {% for dish in dishes %}
+                    <tr>
+                        <td>
+                            {% if dish.dish_image %}
+                                <img src="{{ dish.dish_image }}" alt="{{ dish.name }}" style="width:80px; height:60px; object-fit:cover; border-radius:4px;">
+                            {% else %}
+                                <span>无图片</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ dish.name }}</td>
+                        <td>¥{{ dish.price }}</td>
+                        <td>{{ "%.1f"|format(dish.discount*100) }}%</td>
+                        <td>¥{{ dish.final_price }}</td>
+                        <td>
+                            <!-- 数量输入框：默认值改为1，提升用户体验 -->
+                            <input type="number" class="quantity" data-dish-id="{{ dish.id }}" value="1" min="1">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+
+        <!-- 提交按钮 -->
+        <button onclick="submitOrder()" class="submit-btn">提交订单</button>
+
+        <!-- 订单结果 -->
+        <div id="order-result" class="result hidden"></div>
+    </div>
+
+    <script>
+        // 切换订单类型
+        let currentOrderType = 'dinein';
+        function switchOrderType(type) {
+            currentOrderType = type;
+            // 移除所有按钮的active类
+            document.querySelectorAll('.order-type button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // 给当前点击的按钮添加active类
+            event.target.classList.add('active');
+            // 切换表单显示
+            document.getElementById('dinein-form').style.display = type === 'dinein' ? 'block' : 'none';
+            document.getElementById('takeout-form').style.display = type === 'takeout' ? 'block' : 'none';
+        }
+
+        // 提交订单（核心修复：菜品参数改为数组格式）
+        function submitOrder() {
+            const formData = new FormData();
+            formData.append('order_type', currentOrderType);
+
+            // 收集订单基础信息
+            if (currentOrderType === 'dinein') {
+                const tableNum = document.getElementById('table_num').value.trim();
+                const phone = document.getElementById('dinein_phone').value.trim();
+                const hasRoomFee = document.getElementById('has_room_fee').checked ? 1 : 0;
+                
+                // 验证
+                if (!tableNum) {
+                    alert('请输入餐桌号');
+                    return;
+                }
+                if (!phone || phone.length !== 11 || isNaN(phone)) {
+                    alert('请输入有效的11位手机号');
+                    return;
+                }
+                
+                formData.append('table_num', tableNum);
+                formData.append('phone', phone);
+                formData.append('has_room_fee', hasRoomFee);
+            } else {
+                const takeoutTime = document.getElementById('takeout_time').value.trim();
+                const takeoutAddress = document.getElementById('takeout_address').value.trim();
+                const phone = document.getElementById('takeout_phone').value.trim();
+                
+                if (!takeoutTime) {
+                    alert('请选择送餐时间');
+                    return;
+                }
+                if (!takeoutAddress) {
+                    alert('请输入送餐地址');
+                    return;
+                }
+                if (!phone || phone.length !== 11 || isNaN(phone)) {
+                    alert('请输入有效的11位手机号');
+                    return;
+                }
+                
+                formData.append('takeout_time', takeoutTime);
+                formData.append('takeout_address', takeoutAddress);
+                formData.append('phone', phone);
+            }
+
+            // 核心修复：收集菜品信息（使用数组格式dish_id[]/quantity[]）
+            const quantityInputs = document.querySelectorAll('.quantity');
+            let hasItem = false;
+            
+            quantityInputs.forEach(input => {
+                const dishId = input.getAttribute('data-dish-id');
+                const quantity = parseInt(input.value.trim());
+                
+                // 只收集数量>0的菜品
+                if (quantity > 0) {
+                    // 关键：使用[]后缀，让后端识别为数组
+                    formData.append('dish_id[]', dishId);
+                    formData.append('quantity[]', quantity);
+                    hasItem = true;
+                }
+            });
+
+            // 验证是否选择菜品
+            if (!hasItem) {
+                alert('请选择至少一道菜品（数量需大于0）');
+                return;
+            }
+
+            // 提交请求
+            fetch('/submit_order', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const resultDiv = document.getElementById('order-result');
+                resultDiv.style.display = 'block';
+                
+                if (data.success) {
+                    resultDiv.textContent = data.order_info;
+                    // 重置表单
+                    resetForm();
+                } else {
+                    resultDiv.textContent = '提交失败：' + (data.error || '未知错误');
+                }
+            })
+            .catch(error => {
+                alert('提交失败：' + error.message);
+            });
+        }
+
+        // 重置表单辅助函数
+        function resetForm() {
+            // 重置到店表单
+            document.getElementById('table_num').value = '';
+            document.getElementById('dinein_phone').value = '';
+            document.getElementById('has_room_fee').checked = false;
+            
+            // 重置外卖表单
+            document.getElementById('takeout_time').value = '';
+            document.getElementById('takeout_address').value = '';
+            document.getElementById('takeout_phone').value = '';
+            
+            // 重置菜品数量
+            document.querySelectorAll('.quantity').forEach(input => {
+                input.value = 1;
+            });
+            
+            // 隐藏结果框（可选）
+            // document.getElementById('order-result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>餐厅点餐系统 - 管理员面板</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>管理员面板</h1>
+        <div class="admin-link">
+            <a href="/admin/logout">退出登录</a> | 
+            <a href="/">返回顾客端</a> | 
+            <a href="/admin/sales">销售统计</a>
+        </div>
+
+        <div class="admin-panel">
+            <!-- 菜品管理模块 -->
+            <div class="panel-section">
+                <h2>菜品管理</h2>
+                
+                <!-- 添加菜品表单（新增图片上传） -->
+                <div class="dish-form">
+                    <h3>添加新菜品</h3>
+                    <div class="form-group">
+                        <label>菜品名称：</label>
+                        <input type="text" id="dish_name" placeholder="例如：鱼香肉丝">
+                    </div>
+                    <div class="form-group">
+                        <label>菜品价格：</label>
+                        <input type="number" id="dish_price" step="0.01" min="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>折扣（0-1）：</label>
+                        <input type="number" id="dish_discount" step="0.01" min="0.01" max="1.0" value="1.0">
+                    </div>
+                    <div class="form-group">
+                        <label>菜品图片：</label>
+                        <input type="file" id="dish_image" accept="image/png, image/jpg, image/jpeg, image/gif">
+                    </div>
+                    <button onclick="addDish()" class="action-btn">添加菜品</button>
+                    <div id="dish-message" class="hidden"></div>
+                </div>
+
+                <!-- 修改菜品表单（新增图片上传） -->
+                <div class="dish-form">
+                    <h3>修改菜品信息</h3>
+                    <div class="form-group">
+                        <label>菜品ID：</label>
+                        <input type="number" id="update_dish_id" min="1" placeholder="菜品ID">
+                    </div>
+                    <div class="form-group">
+                        <label>新菜品名：</label>
+                        <input type="text" id="update_dish_name" placeholder="可选">
+                    </div>
+                    <div class="form-group">
+                        <label>新价格：</label>
+                        <input type="number" id="update_dish_price" step="0.01" min="0.01" placeholder="可选">
+                    </div>
+                    <div class="form-group">
+                        <label>新折扣：</label>
+                        <input type="number" id="update_dish_discount" step="0.01" min="0.01" max="1.0" placeholder="可选">
+                    </div>
+                    <div class="form-group">
+                        <label>新菜品图片：</label>
+                        <input type="file" id="new_image" accept="image/png, image/jpg, image/jpeg, image/gif">
+                    </div>
+                    <button onclick="updateDish()" class="action-btn">修改菜品</button>
+                    <div id="update-message" class="hidden"></div>
+                </div>
+
+                <!-- 删除菜品表单（不变） -->
+                <div class="dish-form">
+                    <h3>删除菜品</h3>
+                    <div class="form-group">
+                        <label>菜品ID：</label>
+                        <input type="number" id="delete_dish_id" min="1" placeholder="菜品ID">
+                    </div>
+                    <button onclick="deleteDish()" class="action-btn delete-btn">删除菜品</button>
+                    <div id="delete-message" class="hidden"></div>
+                </div>
+            </div>
+
+            <!-- 订单管理模块（新增修改/导出功能） -->
+            <div class="panel-section">
+                <h2>订单管理</h2>
+                
+                <div class="search-form">
+                    <h3>搜索订单</h3>
+                    <div class="form-group">
+                        <label>搜索类型：</label>
+                        <select id="search_type" style="padding:8px; width:300px; border:1px solid #ccc; border-radius:4px;">
+                            <option value="order_no">订单编号</option>
+                            <option value="phone">手机号</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>搜索关键词：</label>
+                        <input type="text" id="search_keyword" placeholder="订单编号/手机号">
+                    </div>
+                    <button onclick="searchOrder()" class="action-btn">搜索订单</button>
+                    <div id="order-message" class="hidden"></div>
+                    
+                    <div id="order-result" class="result hidden"></div>
+                </div>
+
+                <div class="search-form">
+                    <h3>删除订单</h3>
+                    <div class="form-group">
+                        <label>订单编号：</label>
+                        <input type="text" id="delete_order_no" placeholder="例如：ORD20251217120000123">
+                    </div>
+                    <button onclick="deleteOrder()" class="action-btn delete-btn">删除订单</button>
+                    <div id="delete-order-message" class="hidden"></div>
+                </div>
+
+                <!-- 新增：修改订单模块 -->
+                <div class="search-form">
+                    <h3>修改订单</h3>
+                    <div class="form-group">
+                        <label>订单编号：</label>
+                        <input type="text" id="update_order_no" placeholder="输入要修改的订单编号">
+                    </div>
+                    <div class="form-group">
+                        <label>修改类型：</label>
+                        <select id="update_type" style="padding:8px; width:300px; border:1px solid #ccc; border-radius:4px;">
+                            <option value="status">订单状态</option>
+                            <option value="phone">手机号</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>新值：</label>
+                        <input type="text" id="update_new_value" placeholder="状态：completed/cancelled/pending/delivered | 手机号：11位数字">
+                    </div>
+                    <button onclick="updateOrder()" class="action-btn">修改订单</button>
+                    <div id="update-order-message" class="hidden"></div>
+                </div>
+
+                <!-- 新增：导出订单模块 -->
+                <div class="search-form">
+                    <h3>导出当天订单</h3>
+                    <button onclick="exportOrders()" class="action-btn" style="background-color: #4CAF50;">导出到CSV文件</button>
+                    <div id="export-message" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 菜品列表（新增图片展示） -->
+        <div class="dish-list">
+            <h2>当前菜品列表</h2>
+            {% if dishes|length == 0 %}
+                <p style="text-align:center; padding:20px;">暂无菜品，请先添加菜品</p>
+            {% else %}
+                <table>
+                    <tr>
+                        <th>菜品ID</th>
+                        <th>菜品图片</th>  <!-- 新增 -->
+                        <th>菜品名称</th>
+                        <th>原价(元)</th>
+                        <th>折扣</th>
+                        <th>折后价(元)</th>
+                    </tr>
+                    {% for dish in dishes %}
+                    <tr>
+                        <td>{{ dish.id }}</td>
+                        <td>
+                            {% if dish.dish_image %}
+                                <img src="{{ dish.dish_image }}" alt="{{ dish.name }}" style="width:80px; height:60px; object-fit:cover; border-radius:4px;">
+                            {% else %}
+                                <span>无图片</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ dish.name }}</td>
+                        <td>¥{{ dish.price }}</td>
+                        <td>{{ "%.0f"|format(dish.discount*100) }}%</td>
+                        <td>¥{{ dish.final_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // 通用提示函数
+        function showMessage(elementId, message, isError = false) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.textContent = message;
+            el.style.color = isError ? '#f44336' : '#4CAF50';
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 3000);
+        }
+
+        // 添加菜品（支持文件上传）
+        function addDish() {
+            const name = document.getElementById('dish_name').value.trim();
+            const price = parseFloat(document.getElementById('dish_price').value);
+            const discount = parseFloat(document.getElementById('dish_discount').value);
+            const dishImage = document.getElementById('dish_image').files[0];
+
+            if (!name) {
+                showMessage('dish-message', '请输入菜品名称', true);
+                return;
+            }
+            if (isNaN(price) || price <= 0) {
+                showMessage('dish-message', '请输入有效的菜品价格', true);
+                return;
+            }
+            if (isNaN(discount) || discount <= 0 || discount > 1) {
+                showMessage('dish-message', '折扣必须在0-1之间', true);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('discount', discount);
+            if (dishImage) {
+                formData.append('dish_image', dishImage);
+            }
+
+            fetch('/admin/dish/add', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('dish-message', '菜品添加成功！');
+                    // 重置表单
+                    document.getElementById('dish_name').value = '';
+                    document.getElementById('dish_price').value = '';
+                    document.getElementById('dish_discount').value = 1.0;
+                    document.getElementById('dish_image').value = '';
+                    // 刷新页面
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showMessage('dish-message', '添加失败：' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('dish-message', '网络错误：' + error.message, true);
+            });
+        }
+
+        // 修改菜品（支持文件上传）
+        function updateDish() {
+            const dishId = document.getElementById('update_dish_id').value.trim();
+            const newName = document.getElementById('update_dish_name').value.trim();
+            const newPrice = document.getElementById('update_dish_price').value.trim();
+            const newDiscount = document.getElementById('update_dish_discount').value.trim();
+            const newImage = document.getElementById('new_image').files[0];
+
+            if (!dishId) {
+                showMessage('update-message', '请输入菜品ID', true);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('dish_id', dishId);
+            if (newName) formData.append('new_name', newName);
+            if (newPrice) formData.append('new_price', parseFloat(newPrice));
+            if (newDiscount) formData.append('new_discount', parseFloat(newDiscount));
+            if (newImage) formData.append('new_image', newImage);
+
+            fetch('/admin/dish/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('update-message', '菜品修改成功！');
+                    // 重置表单
+                    document.getElementById('update_dish_id').value = '';
+                    document.getElementById('update_dish_name').value = '';
+                    document.getElementById('update_dish_price').value = '';
+                    document.getElementById('update_dish_discount').value = '';
+                    document.getElementById('new_image').value = '';
+                    // 刷新页面
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showMessage('update-message', '修改失败：' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('update-message', '网络错误：' + error.message, true);
+            });
+        }
+
+        // 删除菜品（不变）
+        function deleteDish() {
+            const dishId = document.getElementById('delete_dish_id').value.trim();
+            if (!dishId) {
+                showMessage('delete-message', '请输入菜品ID', true);
+                return;
+            }
+
+            if (!confirm('确定要删除该菜品吗？删除后无法恢复！')) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('dish_id', dishId);
+
+            fetch('/admin/dish/delete', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('delete-message', '菜品删除成功！');
+                    document.getElementById('delete_dish_id').value = '';
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showMessage('delete-message', '删除失败：' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('delete-message', '网络错误：' + error.message, true);
+            });
+        }
+
+        // 搜索订单（不变）
+        function searchOrder() {
+            const searchType = document.getElementById('search_type').value;
+            const keyword = document.getElementById('search_keyword').value.trim();
+
+            if (!keyword) {
+                showMessage('order-message', '请输入搜索关键词', true);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('search_type', searchType);
+            formData.append('keyword', keyword);
+
+            fetch('/admin/order/search', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('order-result');
+                resultDiv.style.display = 'block';
+                if (data.success) {
+                    if (data.orders.length === 0) {
+                        resultDiv.textContent = '未找到相关订单';
+                        return;
+                    }
+                    let orderText = '';
+                    data.orders.forEach((order, index) => {
+                        orderText += `\n===== 订单 ${index+1} =====\n${order.info}\n`;
+                    });
+                    resultDiv.textContent = orderText;
+                } else {
+                    resultDiv.textContent = '搜索失败：' + data.error;
+                }
+            })
+            .catch(error => {
+                showMessage('order-message', '网络错误：' + error.message, true);
+            });
+        }
+
+        // 删除订单（不变）
+        function deleteOrder() {
+            const orderNo = document.getElementById('delete_order_no').value.trim();
+            if (!orderNo) {
+                showMessage('delete-order-message', '请输入订单编号', true);
+                return;
+            }
+
+            if (!confirm('确定要删除该订单吗？删除后无法恢复！')) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('order_no', orderNo);
+
+            fetch('/admin/order/delete', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('delete-order-message', '订单删除成功！');
+                    document.getElementById('delete_order_no').value = '';
+                } else {
+                    showMessage('delete-order-message', '删除失败：' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('delete-order-message', '网络错误：' + error.message, true);
+            });
+        }
+
+        // 新增：修改订单
+        function updateOrder() {
+            const orderNo = document.getElementById('update_order_no').value.trim();
+            const updateType = document.getElementById('update_type').value;
+            const newValue = document.getElementById('update_new_value').value.trim();
+
+            if (!orderNo) {
+                showMessage('update-order-message', '请输入订单编号', true);
+                return;
+            }
+            if (!newValue) {
+                showMessage('update-order-message', '请输入新值', true);
+                return;
+            }
+
+            // 手机号验证
+            if (updateType === 'phone' && (newValue.length !== 11 || isNaN(newValue))) {
+                showMessage('update-order-message', '请输入有效的11位手机号', true);
+                return;
+            }
+
+            // 状态验证
+            if (updateType === 'status') {
+                const validStatus = ['completed', 'cancelled', 'pending', 'delivered'];
+                if (!validStatus.includes(newValue)) {
+                    showMessage('update-order-message', `状态必须是：${validStatus.join('/')}`, true);
+                    return;
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('order_no', orderNo);
+            formData.append('update_type', updateType);
+            formData.append('new_value', newValue);
+
+            fetch('/admin/order/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('update-order-message', '订单修改成功！', false);
+                    // 重置表单
+                    document.getElementById('update_order_no').value = '';
+                    document.getElementById('update_new_value').value = '';
+                } else {
+                    showMessage('update-order-message', '修改失败：' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('update-order-message', '网络错误：' + error.message, true);
+            });
+        }
+
+        // 新增：导出当天订单
+        function exportOrders() {
+            fetch('/admin/export_orders', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('export-message', data.message, false);
+                } else {
+                    showMessage('export-message', '导出失败：' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('export-message', '网络错误：' + error.message, true);
+            });
+        }
+    </script>
+</body>
+</html>

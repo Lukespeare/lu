@@ -1,0 +1,415 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+h2 {
+    margin: 15px 0;
+    color: #444;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+h3 {
+    margin: 10px 0;
+    color: #555;
+}
+
+h4 {
+    color: #666;
+    margin: 8px 0;
+}
+
+.admin-link {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.admin-link a {
+    color: #4CAF50;
+    text-decoration: none;
+    margin-left: 10px;
+}
+
+.admin-link a:hover {
+    text-decoration: underline;
+}
+
+/* 订单类型切换按钮 */
+.order-type {
+    margin: 20px 0;
+}
+
+.order-type button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    transition: background-color 0.3s;
+}
+
+.order-type button.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.order-type button:hover:not(.active) {
+    background-color: #e0e0e0;
+}
+
+/* 表单通用样式 */
+.order-form, .dish-form, .search-form, .stats-form {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.form-group {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.form-group label {
+    display: inline-block;
+    width: 120px;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-group input {
+    padding: 8px 10px;
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 5px;
+}
+
+.form-group input[type="number"] {
+    width: 100px;
+}
+
+/* 文件上传样式优化 */
+.form-group input[type="file"] {
+    padding: 5px;
+    border: none;
+    background-color: #fff;
+}
+
+/* 下拉选择框样式 */
+.form-group select {
+    padding: 8px 10px;
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #555;
+    background-color: #fff;
+    transition: border-color 0.3s;
+}
+
+.form-group select:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+/* 菜品列表/订单列表表格样式 */
+.dish-list, .order-list, .stats-result {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    background-color: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+th, td {
+    border: 1px solid #eee;
+    padding: 12px 15px;
+    text-align: center;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+    color: #444;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* 菜品图片样式优化 */
+td img {
+    border: 1px solid #eee;
+    padding: 2px;
+    border-radius: 4px;
+    transition: transform 0.3s;
+}
+
+td img:hover {
+    transform: scale(1.05);
+}
+
+/* 数量输入框 */
+.quantity {
+    width: 60px;
+    padding: 5px;
+    text-align: center;
+}
+
+/* 按钮通用样式 */
+.submit-btn, .action-btn {
+    padding: 10px 30px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px 0;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover, .action-btn:hover {
+    background-color: #43a047;
+}
+
+.action-btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    background-color: #2196F3;
+}
+
+.action-btn:hover {
+    background-color: #1976D2;
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+    background-color: #f44336;
+}
+
+.delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* 导出按钮样式 */
+.export-btn {
+    background-color: #4CAF50 !important;
+}
+
+.export-btn:hover {
+    background-color: #388E3C !important;
+}
+
+/* 结果展示区域 */
+.result, .stats-result {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    white-space: pre-wrap; /* 保留换行符 */
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 隐藏样式 */
+.hidden {
+    display: none;
+}
+
+/* 提示消息样式 */
+#dish-message, #update-message, #delete-message, 
+#order-message, #delete-order-message, #update-order-message, #export-message {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 管理员面板布局优化 */
+.admin-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.panel-section {
+    flex: 1;
+    min-width: 400px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* 登录表单样式 */
+.login-form {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.login-form .form-group {
+    margin: 15px 0;
+}
+
+.login-form .submit-btn {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* 错误提示样式 */
+.error {
+    color: #f44336;
+    text-align: center;
+    margin: 10px 0;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #ffebee;
+}
+
+/* 销售统计样式 */
+.stats-form {
+    margin-bottom: 30px;
+}
+
+.stats-item {
+    margin: 10px 0;
+    padding: 15px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stats-item h4 {
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.stats-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2196F3;
+}
+
+/* 响应式适配 */
+@media (max-width: 1200px) {
+    .container {
+        width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 15px;
+    }
+    
+    .admin-panel {
+        flex-direction: column;
+    }
+    
+    .panel-section {
+        min-width: 100%;
+    }
+    
+    .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .form-group label {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .form-group input, .form-group select {
+        width: 100%;
+    }
+    
+    .form-group input[type="number"] {
+        width: 100%;
+    }
+    
+    th, td {
+        padding: 8px 5px;
+        font-size: 13px;
+    }
+}
+
+/* 订单修改/导出模块专属样式 */
+.update-order-form, .export-form {
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+/* 确认弹窗样式优化 */
+::backdrop {
+    background-color: rgba(0,0,0,0.5);
+}
+
+/* 加载状态提示 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

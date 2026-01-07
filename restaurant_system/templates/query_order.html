@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>订单查询与修改 - 餐厅点餐系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .search-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .form-group label {
+            width: 120px;
+            font-size: 16px;
+            color: #555;
+        }
+        .form-group select, .form-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            margin-right: 10px;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #333;
+            margin-right: 10px;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .order-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+        .order-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .order-info {
+            margin-bottom: 15px;
+            line-height: 1.8;
+            color: #555;
+        }
+        .modify-form, .item-modify-form {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ddd;
+            display: none;
+        }
+        .modify-form .form-group, .item-modify-form .form-group {
+            margin-bottom: 10px;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .dish-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .dish-table th, .dish-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .dish-table th {
+            background-color: #f8f9fa;
+        }
+        .quantity-input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+        }
+        .add-dish-form {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>订单查询与修改</h1>
+        
+        <!-- 搜索区域 -->
+        <div class="search-box">
+            <div class="form-group">
+                <label for="search_type">查询类型：</label>
+                <select id="search_type">
+                    <option value="order_no">订单编号</option>
+                    <option value="phone">手机号</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="keyword">查询内容：</label>
+                <input type="text" id="keyword" placeholder="请输入订单编号或11位手机号">
+            </div>
+            <button class="btn btn-primary" onclick="searchOrder()">查询订单</button>
+            <div id="search_error" class="error"></div>
+        </div>
+        
+        <!-- 订单结果区域 -->
+        <div id="order_result"></div>
+        
+        <a href="/" class="back-link">返回点餐首页</a>
+    </div>
+
+    <script>
+        // 全局存储所有菜品数据
+        let allDishes = [];
+        
+        // 页面加载时获取所有菜品
+        window.onload = function() {
+            fetch('/get_all_dishes')
+                .then(response => response.json())
+                .then(data => {
+                    allDishes = data;
+                })
+                .catch(error => {
+                    console.error('获取菜品列表失败:', error);
+                });
+        };
+
+        // 搜索订单
+        function searchOrder() {
+            const searchType = document.getElementById('search_type').value;
+            const keyword = document.getElementById('keyword').value.trim();
+            const resultDiv = document.getElementById('order_result');
+            const errorDiv = document.getElementById('search_error');
+            
+            // 清空之前的结果和错误
+            resultDiv.innerHTML = '';
+            errorDiv.innerHTML = '';
+            
+            // 验证输入
+            if (!keyword) {
+                errorDiv.innerHTML = '请输入查询关键词';
+                return;
+            }
+            
+            if (searchType === 'phone' && (keyword.length !== 11 || isNaN(keyword))) {
+                errorDiv.innerHTML = '请输入有效的11位手机号';
+                return;
+            }
+            
+            // 发送AJAX请求
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/query_order', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            // 渲染订单列表
+                            renderOrders(response.orders);
+                        } else {
+                            errorDiv.innerHTML = response.error || '查询失败';
+                        }
+                    } else {
+                        errorDiv.innerHTML = '网络错误，请重试';
+                    }
+                }
+            };
+            
+            xhr.send(`search_type=${searchType}&keyword=${encodeURIComponent(keyword)}`);
+        }
+        
+        // 渲染订单列表
+        function renderOrders(orders) {
+            const resultDiv = document.getElementById('order_result');
+            let html = '';
+            
+            orders.forEach((order, index) => {
+                // 构建订单信息HTML
+                let orderHtml = `
+                <div class="order-card">
+                    <h3>订单 ${index + 1}：${order.order_no}</h3>
+                    <div class="order-info">
+                        <p><strong>订单类型：</strong>${order.order_type === 'dinein' ? '到店订单' : '外卖订单'}</p>
+                        <p><strong>下单时间：</strong>${order.create_time}</p>
+                        <p><strong>总金额：</strong>¥${order.total_amount.toFixed(2)}</p>
+                        <p><strong>手机号：</strong>${order.phone}</p>
+                        <p><strong>订单状态：</strong>${getStatusText(order.status)}</p>
+                `;
+                
+                // 根据订单类型显示不同字段
+                if (order.order_type === 'dinein') {
+                    orderHtml += `
+                        <p><strong>餐桌号：</strong>${order.table_num || '无'}</p>
+                        <p><strong>包厢费：</strong>${order.has_room_fee ? '¥20.00' : '无'}</p>
+                    `;
+                } else {
+                    orderHtml += `
+                        <p><strong>送餐时间：</strong>${order.takeout_time || '无'}</p>
+                        <p><strong>送餐地址：</strong>${order.takeout_address || '无'}</p>
+                        <p><strong>外卖服务费：</strong>¥5.00</p>
+                    `;
+                }
+                
+                // 显示菜品明细
+                orderHtml += `
+                    <h4 style="margin: 15px 0 10px 0; color: #666;">菜品明细</h4>
+                    <table class="dish-table">
+                        <tr>
+                            <th>菜品名称</th>
+                            <th>单价(元)</th>
+                            <th>数量</th>
+                            <th>小计(元)</th>
+                            <th>操作</th>
+                        </tr>
+                `;
+                
+                if (order.items && order.items.length > 0) {
+                    order.items.forEach(item => {
+                        const subtotal = (item.unit_price * item.quantity).toFixed(2);
+                        orderHtml += `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.unit_price.toFixed(2)}</td>
+                                <td>${item.quantity}</td>
+                                <td>${subtotal}</td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm" onclick="showItemModifyForm('${order.order_no}', ${item.dish_id}, '${item.name}', ${item.quantity})">修改数量</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteOrderItem('${order.order_no}', ${item.dish_id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    orderHtml += `
+                        <tr>
+                            <td colspan="5" style="text-align: center;">暂无菜品</td>
+                        </tr>
+                    `;
+                }
+                
+                orderHtml += `
+                    </table>
+                    
+                    <!-- 菜品数量修改表单 -->
+                    <div id="item_modify_form_${order.order_no}" class="item-modify-form">
+                        <h4>修改菜品数量</h4>
+                        <input type="hidden" id="item_order_no_${order.order_no}" value="${order.order_no}">
+                        <input type="hidden" id="item_dish_id_${order.order_no}" value="">
+                        <div class="form-group">
+                            <label>菜品名称：</label>
+                            <input type="text" id="item_name_${order.order_no}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>新数量：</label>
+                            <input type="number" id="item_quantity_${order.order_no}" min="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-success" onclick="saveOrderItem('${order.order_no}')">保存修改</button>
+                            <button class="btn btn-danger" onclick="hideItemModifyForm('${order.order_no}')">取消</button>
+                        </div>
+                        <div id="item_modify_error_${order.order_no}" class="error"></div>
+                        <div id="item_modify_success_${order.order_no}" class="success"></div>
+                    </div>
+                    
+                    <!-- 添加菜品按钮 -->
+                    <button class="btn btn-primary" style="margin: 10px 0;" onclick="showAddDishForm('${order.order_no}')">添加菜品</button>
+                    
+                    <!-- 添加菜品表单 -->
+                    <div id="add_dish_form_${order.order_no}" class="add-dish-form" style="display: none;">
+                        <h4>添加菜品</h4>
+                        <div class="form-group">
+                            <label>选择菜品：</label>
+                            <select id="add_dish_id_${order.order_no}">
+                                <option value="">--请选择菜品--</option>
+                    `;
+                
+                // 填充菜品下拉列表
+                allDishes.forEach(dish => {
+                    // 排除已存在的菜品
+                    const isExist = order.items && order.items.some(item => item.dish_id === dish.dish_id);
+                    if (!isExist) {
+                        orderHtml += `
+                            <option value="${dish.dish_id}" data-price="${dish.final_price}">${dish.name} (¥${dish.final_price})</option>
+                        `;
+                    }
+                });
+                
+                orderHtml += `
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>数量：</label>
+                            <input type="number" id="add_dish_quantity_${order.order_no}" min="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-success" onclick="addOrderItem('${order.order_no}')">添加</button>
+                            <button class="btn btn-danger" onclick="hideAddDishForm('${order.order_no}')">取消</button>
+                        </div>
+                        <div id="add_dish_error_${order.order_no}" class="error"></div>
+                    </div>
+                `;
+                
+                orderHtml += `
+                    </div>
+                    <button class="btn btn-success" onclick="showModifyForm('${order.order_no}', '${order.order_type}', '${order.phone}', '${order.status}', '${order.table_num || ''}', '${order.takeout_time || ''}', '${order.takeout_address || ''}')">修改订单信息</button>
+                    
+                    <!-- 修改表单 -->
+                    <div id="modify_form_${order.order_no}" class="modify-form">
+                        <h4>修改订单信息</h4>
+                        <input type="hidden" id="order_no_${order.order_no}" value="${order.order_no}">
+                        <input type="hidden" id="order_type_${order.order_no}" value="${order.order_type}">
+                        
+                        <div class="form-group">
+                            <label>订单状态：</label>
+                            <select id="status_${order.order_no}">
+                                <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>已完成</option>
+                                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>已取消</option>
+                                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>待配送</option>
+                                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>配送中</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>手机号：</label>
+                            <input type="tel" id="phone_${order.order_no}" value="${order.phone}" maxlength="11">
+                        </div>
+                `;
+                
+                // 根据订单类型显示专属修改字段
+                if (order.order_type === 'dinein') {
+                    orderHtml += `
+                        <div class="form-group">
+                            <label>餐桌号：</label>
+                            <input type="text" id="table_num_${order.order_no}" value="${order.table_num || ''}">
+                        </div>
+                    `;
+                } else {
+                    orderHtml += `
+                        <div class="form-group">
+                            <label>送餐时间：</label>
+                            <input type="text" id="takeout_time_${order.order_no}" value="${order.takeout_time || ''}" placeholder="例如：2025-12-20 18:30">
+                        </div>
+                        <div class="form-group">
+                            <label>送餐地址：</label>
+                            <input type="text" id="takeout_address_${order.order_no}" value="${order.takeout_address || ''}">
+                        </div>
+                    `;
+                }
+                
+                orderHtml += `
+                        <div class="form-group">
+                            <button class="btn btn-success" onclick="saveOrder('${order.order_no}')">保存修改</button>
+                            <button class="btn btn-danger" onclick="hideModifyForm('${order.order_no}')">取消</button>
+                        </div>
+                        <div id="modify_error_${order.order_no}" class="error"></div>
+                        <div id="modify_success_${order.order_no}" class="success"></div>
+                    </div>
+                </div>
+                `;
+                
+                html += orderHtml;
+            });
+            
+            resultDiv.innerHTML = html;
+        }
+        
+        // 显示订单信息修改表单
+        function showModifyForm(orderNo, orderType, phone, status, tableNum, takeoutTime, takeoutAddress) {
+            // 隐藏所有其他修改表单
+            hideAllModifyForms();
+            
+            // 显示当前订单的修改表单
+            document.getElementById(`modify_form_${orderNo}`).style.display = 'block';
+            
+            // 清空之前的错误/成功提示
+            document.getElementById(`modify_error_${orderNo}`).innerHTML = '';
+            document.getElementById(`modify_success_${orderNo}`).innerHTML = '';
+        }
+        
+        // 隐藏订单信息修改表单
+        function hideModifyForm(orderNo) {
+            document.getElementById(`modify_form_${orderNo}`).style.display = 'none';
+        }
+        
+        // 显示菜品数量修改表单
+        function showItemModifyForm(orderNo, dishId, dishName, quantity) {
+            // 隐藏其他表单
+            hideAllModifyForms();
+            
+            const form = document.getElementById(`item_modify_form_${orderNo}`);
+            document.getElementById(`item_dish_id_${orderNo}`).value = dishId;
+            document.getElementById(`item_name_${orderNo}`).value = dishName;
+            document.getElementById(`item_quantity_${orderNo}`).value = quantity;
+            
+            // 清空提示
+            document.getElementById(`item_modify_error_${orderNo}`).innerHTML = '';
+            document.getElementById(`item_modify_success_${orderNo}`).innerHTML = '';
+            
+            form.style.display = 'block';
+        }
+        
+        // 隐藏菜品数量修改表单
+        function hideItemModifyForm(orderNo) {
+            document.getElementById(`item_modify_form_${orderNo}`).style.display = 'none';
+        }
+        
+        // 显示添加菜品表单
+        function showAddDishForm(orderNo) {
+            hideAllModifyForms();
+            document.getElementById(`add_dish_form_${orderNo}`).style.display = 'block';
+            document.getElementById(`add_dish_error_${orderNo}`).innerHTML = '';
+        }
+        
+        // 隐藏添加菜品表单
+        function hideAddDishForm(orderNo) {
+            document.getElementById(`add_dish_form_${orderNo}`).style.display = 'none';
+        }
+        
+        // 隐藏所有修改表单
+        function hideAllModifyForms() {
+            const allModifyForms = document.querySelectorAll('.modify-form, .item-modify-form');
+            allModifyForms.forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // 隐藏所有添加菜品表单
+            const addDishForms = document.querySelectorAll('.add-dish-form');
+            addDishForms.forEach(form => {
+                form.style.display = 'none';
+            });
+        }
+        
+        // 保存订单信息修改
+        function saveOrder(orderNo) {
+            const orderType = document.getElementById(`order_type_${orderNo}`).value;
+            const newStatus = document.getElementById(`status_${orderNo}`).value;
+            const newPhone = document.getElementById(`phone_${orderNo}`).value.trim();
+            const errorDiv = document.getElementById(`modify_error_${orderNo}`);
+            const successDiv = document.getElementById(`modify_success_${orderNo}`);
+            
+            // 清空提示
+            errorDiv.innerHTML = '';
+            successDiv.innerHTML = '';
+            
+            // 验证手机号
+            if (newPhone.length !== 11 || isNaN(newPhone)) {
+                errorDiv.innerHTML = '请输入有效的11位手机号';
+                return;
+            }
+            
+            // 收集需要修改的字段
+            const fields = [
+                { name: 'status', value: newStatus },
+                { name: 'phone', value: newPhone }
+            ];
+            
+            // 根据订单类型添加专属字段
+            if (orderType === 'dinein') {
+                const newTableNum = document.getElementById(`table_num_${orderNo}`).value.trim();
+                if (newTableNum) {
+                    fields.push({ name: 'table_num', value: newTableNum });
+                }
+            } else {
+                const newTakeoutTime = document.getElementById(`takeout_time_${orderNo}`).value.trim();
+                const newTakeoutAddress = document.getElementById(`takeout_address_${orderNo}`).value.trim();
+                if (newTakeoutTime) {
+                    fields.push({ name: 'takeout_time', value: newTakeoutTime });
+                }
+                if (newTakeoutAddress) {
+                    fields.push({ name: 'takeout_address', value: newTakeoutAddress });
+                }
+            }
+            
+            // 批量修改字段
+            let modifyCount = 0;
+            let errorCount = 0;
+            
+            fields.forEach(field => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/update_order', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                modifyCount++;
+                            } else {
+                                errorCount++;
+                                errorDiv.innerHTML = response.error || '修改失败';
+                            }
+                            
+                            // 所有字段修改完成后提示
+                            if (modifyCount + errorCount === fields.length) {
+                                if (errorCount === 0) {
+                                    successDiv.innerHTML = '所有字段修改成功！';
+                                    // 重新查询订单
+                                    setTimeout(() => {
+                                        searchOrder();
+                                    }, 1000);
+                                } else {
+                                    errorDiv.innerHTML = `部分字段修改失败（${errorCount}个）`;
+                                }
+                            }
+                        } else {
+                            errorCount++;
+                            errorDiv.innerHTML = '网络错误，请重试';
+                        }
+                    }
+                };
+                
+                xhr.send(`order_no=${orderNo}&field=${field.name}&new_value=${encodeURIComponent(field.value)}`);
+            });
+        }
+        
+        // 保存菜品数量修改
+        function saveOrderItem(orderNo) {
+            const dishId = document.getElementById(`item_dish_id_${orderNo}`).value;
+            const newQuantity = parseInt(document.getElementById(`item_quantity_${orderNo}`).value);
+            const errorDiv = document.getElementById(`item_modify_error_${orderNo}`);
+            const successDiv = document.getElementById(`item_modify_success_${orderNo}`);
+            
+            // 验证
+            errorDiv.innerHTML = '';
+            successDiv.innerHTML = '';
+            
+            if (!dishId || isNaN(newQuantity) || newQuantity < 1) {
+                errorDiv.innerHTML = '请输入有效的数量（至少1）';
+                return;
+            }
+            
+            // 发送请求
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/order/update_item', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            successDiv.innerHTML = '菜品数量修改成功！';
+                            // 重新查询订单
+                            setTimeout(() => {
+                                searchOrder();
+                            }, 1000);
+                        } else {
+                            errorDiv.innerHTML = response.error || '修改失败';
+                        }
+                    } else {
+                        errorDiv.innerHTML = '网络错误，请重试';
+                    }
+                }
+            };
+            
+            xhr.send(`order_no=${orderNo}&dish_id=${dishId}&new_quantity=${newQuantity}`);
+        }
+        
+        // 删除订单项
+        function deleteOrderItem(orderNo, dishId) {
+            if (!confirm('确定要删除该菜品吗？')) {
+                return;
+            }
+            
+            // 发送请求
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/order/delete_item', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            alert('菜品删除成功！');
+                            // 重新查询订单
+                            searchOrder();
+                        } else {
+                            alert('删除失败：' + (response.error || '未知错误'));
+                        }
+                    } else {
+                        alert('网络错误，请重试');
+                    }
+                }
+            };
+            
+            xhr.send(`order_no=${orderNo}&dish_id=${dishId}`);
+        }
+        
+        // 添加订单项
+        function addOrderItem(orderNo) {
+            const dishSelect = document.getElementById(`add_dish_id_${orderNo}`);
+            const dishId = dishSelect.value;
+            const quantity = parseInt(document.getElementById(`add_dish_quantity_${orderNo}`).value);
+            const errorDiv = document.getElementById(`add_dish_error_${orderNo}`);
+            
+            errorDiv.innerHTML = '';
+            
+            // 验证
+            if (!dishId) {
+                errorDiv.innerHTML = '请选择要添加的菜品';
+                return;
+            }
+            
+            if (isNaN(quantity) || quantity < 1) {
+                errorDiv.innerHTML = '请输入有效的数量（至少1）';
+                return;
+            }
+            
+            // 发送请求
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/order/add_item', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            alert('菜品添加成功！');
+                            // 重新查询订单
+                            searchOrder();
+                        } else {
+                            errorDiv.innerHTML = response.error || '添加失败';
+                        }
+                    } else {
+                        errorDiv.innerHTML = '网络错误，请重试';
+                    }
+                }
+            };
+            
+            xhr.send(`order_no=${orderNo}&dish_id=${dishId}&quantity=${quantity}`);
+        }
+        
+        // 状态文本转换
+        function getStatusText(status) {
+            const statusMap = {
+                'completed': '已完成',
+                'cancelled': '已取消',
+                'pending': '待配送',
+                'delivered': '配送中'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 修复按钮样式
+        document.addEventListener('DOMContentLoaded', function() {
+            // 动态添加小按钮样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .btn-sm {
+                    padding: 5px 10px;
+                    font-size: 14px;
+                    border-radius: 3px;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>

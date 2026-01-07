@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>销售统计 - 餐厅点餐系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .summary-card {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .summary-item {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .dish-stats table {
+            margin: 20px 0;
+            width: 100%;
+        }
+        .type-ratio {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .ratio-item {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .ratio-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .ratio-value {
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        .back-link {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .back-link a {
+            color: #2196F3;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 1px solid #2196F3;
+            border-radius: 4px;
+        }
+        .back-link a:hover {
+            background: #2196F3;
+            color: white;
+        }
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container stats-container">
+        <h1>销售统计 - {{ date_str }}</h1>
+        <div class="admin-link">
+            <a href="/admin/panel">返回管理员面板</a> | 
+            <a href="/admin/logout">退出登录</a>
+        </div>
+
+        <!-- 日期选择表单 -->
+        <div class="stats-form">
+            <h3>选择统计日期</h3>
+            <form method="POST">
+                <div class="form-group">
+                    <label>统计日期：</label>
+                    <input type="date" name="date" value="{{ date_str }}" required>
+                </div>
+                <button type="submit" class="action-btn">查询统计</button>
+            </form>
+        </div>
+
+        <!-- 统计结果展示 -->
+        {% if stats %}
+            <!-- 总览数据 -->
+            <div class="summary-card">
+                <div class="summary-item">
+                    <h3>总订单数</h3>
+                    <div class="summary-value">{{ stats.total_orders }}</div>
+                </div>
+                <div class="summary-item">
+                    <h3>总销售额(元)</h3>
+                    <div class="summary-value">¥{{ "%.2f"|format(stats.total_sales) }}</div>
+                </div>
+                <div class="summary-item">
+                    <h3>外卖订单数</h3>
+                    <div class="summary-value">{{ stats.takeout.count }}</div>
+                </div>
+                <div class="summary-item">
+                    <h3>到店订单数</h3>
+                    <div class="summary-value">{{ stats.dinein.count }}</div>
+                </div>
+            </div>
+
+            <!-- 订单类型占比 -->
+            <div class="type-ratio">
+                <div class="ratio-item">
+                    <div class="ratio-label">外卖订单占比</div>
+                    <div class="ratio-value">{{ "%.1f%%"|format(stats.takeout.ratio) }}</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                        销售额：¥{{ "%.2f"|format(stats.takeout.sales) }} ({{ "%.1f%%"|format(stats.takeout.sales_ratio) }})
+                    </div>
+                </div>
+                <div class="ratio-item">
+                    <div class="ratio-label">到店订单占比</div>
+                    <div class="ratio-value">{{ "%.1f%%"|format(stats.dinein.ratio) }}</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                        销售额：¥{{ "%.2f"|format(stats.dinein.sales) }} ({{ "%.1f%%"|format(stats.dinein.sales_ratio) }})
+                    </div>
+                </div>
+            </div>
+
+            <!-- 菜品销售明细 -->
+            <div class="dish-stats">
+                <h3>菜品销售情况</h3>
+                <table>
+                    <tr>
+                        <th>菜品名称</th>
+                        <th>销售数量</th>
+                        <th>销售金额(元)</th>
+                        <th>占总销售额比例</th>
+                    </tr>
+                    {% for dish_name, dish_data in stats.dish_stats.items() %}
+                    <tr>
+                        <td>{{ dish_name }}</td>
+                        <td>{{ dish_data.quantity }}</td>
+                        <td>¥{{ "%.2f"|format(dish_data.amount) }}</td>
+                        <td>{{ "%.1f%%"|format((dish_data.amount / stats.total_sales) * 100) }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% else %}
+            <!-- 无数据提示 -->
+            <div class="no-data">
+                暂无 {{ date_str }} 的销售数据
+            </div>
+        {% endif %}
+
+        <div class="back-link">
+            <a href="/admin/panel">返回管理员面板</a>
+        </div>
+    </div>
+</body>
+</html>
