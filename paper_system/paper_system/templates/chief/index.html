@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">已录用稿件</h5>
+    </div>
+    <div class="card-body">
+        {% if papers %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>题目</th>
+                        <th>作者</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in papers %}
+                    <tr>
+                        <td>{{ p.title }}</td>
+                        <td>{{ p.author_name }}</td>
+                        <td>
+                            <a href="{{ url_for('download', paper_id=p.id) }}" class="btn btn-sm btn-primary">下载稿件</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{{ url_for('chief_publish') }}" class="btn btn-primary">去发表稿件</a>
+        {% else %}
+            <div class="alert alert-info">暂无已录用稿件</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

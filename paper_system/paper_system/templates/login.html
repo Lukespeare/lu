@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}登录{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4>稿件评审系统 - 登录</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">账号</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">角色</label>
+                        <select class="form-select" name="role" required>
+                            <option value="author">作者</option>
+                            <option value="editor">编辑</option>
+                            <option value="expert">专家</option>
+                            <option value="chief">主编</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">登录</button>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('register') }}">还没有账号？点击注册（仅作者）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}稿件查询{% endblock %}
+{% block content %}
+<!-- 待处理稿件 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>待处理稿件</h5>
+    </div>
+    <div class="card-body">
+        {% if pending_papers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>稿件标题</th>
+                        <th>投稿时间</th>
+                        <th>状态</th>
+                        <th>评审意见</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in pending_papers %}
+                    <tr>
+                        <td>{{ paper.title }}</td>
+                        <td>{{ paper.create_time.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if paper.status == 'pending_assign' %}待分配{% endif %}
+                            {% if paper.status == 'pending_review' %}待评审{% endif %}
+                            {% if paper.status == 'rejected_review' %}专家拒审{% endif %}
+                            {% if paper.status == 'reviewed' %}审核通过{% endif %}
+                        </td>
+                        <td>
+                            {% if paper.review_info %}
+                                {% if paper.status == 'rejected_review' %}
+                                    <span class="text-danger">拒审原因：{{ paper.review_info.reject_reason }}</span>
+                                {% elif paper.status == 'reviewed' %}
+                                    评分：{{ paper.review_info.score }}分 | 意见：{{ paper.review_info.opinion }}
+                                {% else %}
+                                    暂无
+                                {% endif %}
+                            {% else %}
+                                暂无
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary">下载稿件</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无待处理稿件</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 历史稿件 -->
+<div class="card">
+    <div class="card-header">
+        <h5>历史稿件（退稿/录用）</h5>
+    </div>
+    <div class="card-body">
+        {% if history_papers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>稿件标题</th>
+                        <th>投稿时间</th>
+                        <th>最终状态</th>
+                        <th>评审意见</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in history_papers %}
+                    <tr>
+                        <td>{{ paper.title }}</td>
+                        <td>{{ paper.create_time.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if paper.status == 'rejected' %}<span class="text-danger">退稿</span>{% endif %}
+                            {% if paper.status == 'accepted' %}<span class="text-success">录用</span>{% endif %}
+                            {% if paper.status == 'published' %}<span class="text-primary">已发表</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if paper.review_info %}
+                                评分：{{ paper.review_info.score }}分 | 意见：{{ paper.review_info.opinion }}
+                            {% else %}
+                                暂无
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary">下载稿件</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无历史稿件</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

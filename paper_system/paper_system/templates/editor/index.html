@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}编辑首页{% endblock %}
+{% block content %}
+<!-- 待分配稿件 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>待分配稿件</h5>
+    </div>
+    <div class="card-body">
+        {% if pending_assign %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>关键词</th>
+                        <th>投稿时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in pending_assign %}
+                    <tr>
+                        <td>{{ paper.title }}</td>
+                        <td>{{ paper.author_name }}</td>
+                        <td>{{ paper.keywords }}</td>
+                        <td>{{ paper.create_time.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary">下载</a>
+                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#assignModal{{ paper.id }}">分配</button>
+                            </div>
+                            
+                            <!-- 分配弹窗 -->
+                            <div class="modal fade" id="assignModal{{ paper.id }}" tabindex="-1" aria-labelledby="assignModalLabel{{ paper.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="assignModalLabel{{ paper.id }}">分配稿件：{{ paper.title }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST">
+                                            <div class="modal-body">
+                                                <input type="hidden" name="paper_id" value="{{ paper.id }}">
+                                                <div class="mb-3">
+                                                    <label class="form-label">选择评审专家</label>
+                                                    <select class="form-select" name="expert_id" required>
+                                                        {% for expert in experts %}
+                                                        <option value="{{ expert.id }}">{{ expert.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                                <button type="submit" class="btn btn-primary" name="assign">确认分配</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无待分配稿件</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 待评审稿件 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>待评审稿件</h5>
+    </div>
+    <div class="card-body">
+        {% if pending_review %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>评审专家</th>
+                        <th>分配时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in pending_review %}
+                    <tr>
+                        <td>{{ paper.title }}</td>
+                        <td>{{ paper.author_name }}</td>
+                        <td>{{ paper.expert.name if paper.expert else '未分配' }}</td>
+                        <td>{{ paper.create_time.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary">下载</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无待评审稿件</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 专家拒审稿件 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>专家拒审稿件</h5>
+    </div>
+    <div class="card-body">
+        {% if rejected_review %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>拒审专家</th>
+                        <th>拒审原因</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in rejected_review %}
+                    <tr>
+                        <td>{{ paper.title }}</td>
+                        <td>{{ paper.author_name }}</td>
+                        <td>{{ paper.expert.name if paper.expert else '未知' }}</td>
+                        <td>{{ paper.review_info.reject_reason if paper.review_info else '无' }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary">下载</a>
+                                <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#reassignModal{{ paper.id }}">重新分配</button>
+                            </div>
+                            
+                            <!-- 重新分配弹窗 -->
+                            <div class="modal fade" id="reassignModal{{ paper.id }}" tabindex="-1" aria-labelledby="reassignModalLabel{{ paper.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="reassignModalLabel{{ paper.id }}">重新分配稿件：{{ paper.title }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST">
+                                            <div class="modal-body">
+                                                <input type="hidden" name="paper_id" value="{{ paper.id }}">
+                                                <div class="mb-3">
+                                                    <label class="form-label">选择新的评审专家</label>
+                                                    <select class="form-select" name="expert_id" required>
+                                                        {% for expert in experts %}
+                                                        <option value="{{ expert.id }}">{{ expert.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                                <button type="submit" class="btn btn-primary" name="reassign">确认重新分配</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无专家拒审稿件</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 审核通过稿件（退稿/录用） -->
+<div class="card">
+    <div class="card-header">
+        <h5>审核通过稿件（待决定）</h5>
+    </div>
+    <div class="card-body">
+        {% if reviewed_papers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>评审专家</th>
+                        <th>评分</th>
+                        <th>评审意见</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in reviewed_papers %}
+                    <tr>
+                        <td>{{ paper.title }}</td>
+                        <td>{{ paper.author_name }}</td>
+                        <td>{{ paper.expert.name if paper.expert else '未知' }}</td>
+                        <td>{{ paper.review_info.score if paper.review_info else '无' }}</td>
+                        <td>{{ paper.review_info.opinion if paper.review_info else '无' }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary">下载</a>
+                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#decisionModal{{ paper.id }}">决定</button>
+                            </div>
+                            
+                            <!-- 退稿/录用弹窗 -->
+                            <div class="modal fade" id="decisionModal{{ paper.id }}" tabindex="-1" aria-labelledby="decisionModalLabel{{ paper.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="decisionModalLabel{{ paper.id }}">处理稿件：{{ paper.title }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST">
+                                            <div class="modal-body">
+                                                <input type="hidden" name="paper_id" value="{{ paper.id }}">
+                                                <div class="mb-3">
+                                                    <label class="form-label">处理结果</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="action" id="accept{{ paper.id }}" value="accept" checked>
+                                                        <label class="form-check-label" for="accept{{ paper.id }}">录用</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="action" id="reject{{ paper.id }}" value="reject">
+                                                        <label class="form-check-label" for="reject{{ paper.id }}">退稿</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                                <button type="submit" class="btn btn-primary" name="decision">确认处理</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无审核通过稿件</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

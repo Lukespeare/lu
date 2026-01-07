@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}评审稿件：{{ paper.title }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>评审稿件：{{ paper.title }}</h5>
+    </div>
+    <div class="card-body">
+        <!-- 稿件基本信息 -->
+        <div class="mb-4">
+            <table class="table table-borderless">
+                <tr>
+                    <td width="20%">作者：</td>
+                    <td>{{ paper.author_name }}</td>
+                </tr>
+                <tr>
+                    <td>关键词：</td>
+                    <td>{{ paper.keywords }}</td>
+                </tr>
+                <tr>
+                    <td>投稿时间：</td>
+                    <td>{{ paper.create_time.strftime('%Y-%m-%d') }}</td>
+                </tr>
+            </table>
+            <a href="{{ url_for('download', paper_id=paper.id) }}" class="btn btn-sm btn-primary mb-3">下载稿件原文</a>
+        </div>
+
+        <form method="POST" id="reviewForm">
+            <!-- 操作类型 -->
+            <div class="mb-3">
+                <label class="form-label">操作类型</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="action" id="actionReview" value="review" checked>
+                    <label class="form-check-label" for="actionReview">评审</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="action" id="actionReject" value="reject">
+                    <label class="form-check-label" for="actionReject">拒审</label>
+                </div>
+            </div>
+
+            <!-- 拒审区域 -->
+            <div id="rejectArea" class="mb-3 d-none">
+                <label class="form-label">拒审原因（200字以内）</label>
+                <textarea class="form-control" name="reject_reason" rows="3" maxlength="200"></textarea>
+            </div>
+
+            <!-- 评审区域 -->
+            <div id="reviewArea">
+                <div class="mb-3">
+                    <label class="form-label">评分（0-100分）</label>
+                    <input type="number" class="form-control" name="score" min="0" max="100" id="scoreInput">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">评审意见（200字以内）</label>
+                    <textarea class="form-control" name="opinion" rows="4" maxlength="200" id="opinionInput"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">提交</button>
+            <a href="{{ url_for('expert_index') }}" class="btn btn-secondary ms-2">返回</a>
+        </form>
+    </div>
+</div>
+
+<script>
+// 获取元素
+const actionRadios = document.querySelectorAll('input[name="action"]');
+const rejectArea = document.getElementById('rejectArea');
+const reviewArea = document.getElementById('reviewArea');
+const scoreInput = document.getElementById('scoreInput');
+const opinionInput = document.getElementById('opinionInput');
+const rejectReasonInput = document.querySelector('textarea[name="reject_reason"]');
+
+// 初始化：评审状态下加required
+scoreInput.required = true;
+opinionInput.required = true;
+
+// 切换拒审/评审区域 + 动态控制required
+actionRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (this.value === 'reject') {
+            // 拒审：隐藏评审区，移除其required；显示拒审区，加required
+            rejectArea.classList.remove('d-none');
+            reviewArea.classList.add('d-none');
+            scoreInput.required = false;
+            opinionInput.required = false;
+            rejectReasonInput.required = true;
+        } else {
+            // 评审：显示评审区，加required；隐藏拒审区，移除其required
+            rejectArea.classList.add('d-none');
+            reviewArea.classList.remove('d-none');
+            scoreInput.required = true;
+            opinionInput.required = true;
+            rejectReasonInput.required = false;
+        }
+    });
+});
+
+// 兜底：提交时强制校验（避免浏览器兼容问题）
+document.getElementById('reviewForm').addEventListener('submit', function(e) {
+    const selectedAction = document.querySelector('input[name="action"]:checked').value;
+    // 拒审时校验原因
+    if (selectedAction === 'reject' && !rejectReasonInput.value.trim()) {
+        e.preventDefault(); // 阻止提交
+        alert('拒审原因不能为空！');
+        rejectReasonInput.focus();
+    }
+    // 评审时校验评分和意见
+    if (selectedAction === 'review') {
+        if (!scoreInput.value || scoreInput.value < 0 || scoreInput.value > 100) {
+            e.preventDefault();
+            alert('请输入有效的评分（0-100分）！');
+            scoreInput.focus();
+        } else if (!opinionInput.value.trim()) {
+            e.preventDefault();
+            alert('评审意见不能为空！');
+            opinionInput.focus();
+        }
+    }
+});
+</script>
+{% endblock %}

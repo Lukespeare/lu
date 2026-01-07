@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}投稿 - 步骤5：确认投稿{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>投稿流程 <small class="text-muted">步骤5/5：确认投稿</small></h5>
+    </div>
+    <div class="card-body">
+        <!-- 步骤导航 -->
+        <div class="step-nav mb-4">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <span>1. 文章题目</span>
+                <span>2. 作者信息</span>
+                <span>3. 关键词</span>
+                <span>4. 上传文件</span>
+                <span class="text-primary">5. 确认投稿</span>
+            </div>
+        </div>
+
+        <!-- 信息确认 -->
+        <div class="mb-4">
+            <h6>投稿信息确认：</h6>
+            <table class="table table-borderless">
+                <tr>
+                    <td width="20%">文章题目：</td>
+                    <td>{{ data.title }}</td>
+                </tr>
+                <tr>
+                    <td>作者姓名：</td>
+                    <td>{{ data.author_name }}</td>
+                </tr>
+                <tr>
+                    <td>关键词：</td>
+                    <td>{{ data.keywords }}</td>
+                </tr>
+                <tr>
+                    <td>上传文件：</td>
+                    <!-- 修复：移除basename过滤器，改用Jinja2字符串分割 -->
+                    <td>{{ data.file_path.split('\\')[-1] if '\\' in data.file_path else data.file_path.split('/')[-1] }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <form method="POST">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('author_submit_step4') }}" class="btn btn-secondary">上一步</a>
+                <button type="submit" class="btn btn-primary">确认投稿</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

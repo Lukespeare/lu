@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">稿件发表排序</h5>
+    </div>
+    <div class="card-body">
+        {% if papers %}
+            <form method="POST">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>排序号</th>
+                            <th>题目</th>
+                            <th>作者</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in papers %}
+                        <tr>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" name="sort_{{ p.id }}" value="{{ loop.index }}" min="1" required>
+                            </td>
+                            <td>{{ p.title }}</td>
+                            <td>{{ p.author_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">确认发表</button>
+            </form>
+        {% else %}
+            <div class="alert alert-info">暂无已录用稿件</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

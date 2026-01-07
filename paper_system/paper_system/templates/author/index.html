@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}作者首页{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>作者操作面板</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">投稿</h5>
+                        <p class="card-text">提交新的稿件进行评审</p>
+                        <a href="{{ url_for('author_submit_step1') }}" class="btn btn-primary">开始投稿</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">稿件查询</h5>
+                        <p class="card-text">查看稿件审核状态和评审意见</p>
+                        <a href="{{ url_for('author_papers') }}" class="btn btn-primary">查看稿件</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">个人资料</h5>
+                        <p class="card-text">修改个人信息和密码</p>
+                        <a href="{{ url_for('author_profile') }}" class="btn btn-primary">修改资料</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

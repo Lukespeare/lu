@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}个人资料{% endblock %}
+{% block content %}
+<div class="row">
+    <!-- 修改个人信息 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>修改个人信息</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="" name="update_info">
+                    <div class="mb-3">
+                        <label class="form-label">账号</label>
+                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-control" name="name" value="{{ user.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">手机号</label>
+                        <input type="text" class="form-control" name="phone" value="{{ user.phone or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" name="email" value="{{ user.email or '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary" name="update_info">保存修改</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>修改密码</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="" name="update_pwd">
+                    <div class="mb-3">
+                        <label class="form-label">原密码</label>
+                        <input type="password" class="form-control" name="old_pwd" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">新密码</label>
+                        <input type="password" class="form-control" name="new_pwd" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">确认新密码</label>
+                        <input type="password" class="form-control" name="confirm_pwd" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" name="update_pwd">修改密码</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
